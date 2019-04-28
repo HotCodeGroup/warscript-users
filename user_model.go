@@ -168,6 +168,7 @@ func (us *AccessObject) GetUserByUsername(username string) (*UserModel, error) {
 	return u, nil
 }
 
+//nolint: gosec
 func (us *AccessObject) getUserImpl(q Queryer, field, value string) (*UserModel, error) {
 	u := &UserModel{}
 

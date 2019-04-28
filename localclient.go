@@ -9,11 +9,13 @@ import (
 
 type LocalAuthClient struct{}
 
-func (c *LocalAuthClient) GetUserByID(ctx context.Context, in *models.UserID, opts ...grpc.CallOption) (*models.InfoUser, error) {
+func (c *LocalAuthClient) GetUserByID(ctx context.Context,
+	in *models.UserID, opts ...grpc.CallOption) (*models.InfoUser, error) {
 	return nil, nil
 }
 
-func (c *LocalAuthClient) GetSessionInfo(ctx context.Context, in *models.SessionToken, opts ...grpc.CallOption) (*models.SessionPayload, error) {
+func (c *LocalAuthClient) GetSessionInfo(ctx context.Context,
+	in *models.SessionToken, opts ...grpc.CallOption) (*models.SessionPayload, error) {
 	payload, err := getSessionImpl(in.Token)
 	if err != nil {
 		return nil, err
