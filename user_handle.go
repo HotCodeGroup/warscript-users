@@ -154,6 +154,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	// ставим куку
 	http.SetCookie(w, &http.Cookie{
 		Name:     "JSESSIONID",
+		Path:     "/",
 		Value:    session.Token,
 		Expires:  time.Now().Add(2628000 * time.Second),
 		HttpOnly: true,
