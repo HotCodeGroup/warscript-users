@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"
@@ -73,9 +74,16 @@ func main() {
 	r.HandleFunc("/users/{user_id:[0-9]+}", GetUser).Methods("GET")
 	r.HandleFunc("/users/used", middlewares.WithLimiter(CheckUsername, rate.NewLimiter(3, 5), logger)).Methods("POST")
 
+	corsMiddleware := handlers.CORS(
+		handlers.AllowedOrigins([]string{os.Getenv("CORS_HOST")}),
+		handlers.AllowedMethods([]string{"POST", "GET", "PUT", "DELETE"}),
+		handlers.AllowedHeaders([]string{"Content-Type"}),
+		handlers.AllowCredentials(),
+	)
+
 	httpPort := os.Getenv("HTTP_PORT")
 	logger.Infof("Auth HTTP service successfully started at port %s", httpPort)
-	err = http.ListenAndServe(":"+httpPort, r)
+	err = http.ListenAndServe(":"+httpPort, corsMiddleware(r))
 	if err != nil {
 		logger.Errorf("cant start main server. err: %s", err.Error())
 		return
