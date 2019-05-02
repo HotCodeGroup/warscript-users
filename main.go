@@ -52,13 +52,14 @@ func main() {
 	}
 
 	vault.SetToken(os.Getenv("VAULT_TOKEN"))
-	postgreConf, err := vault.Logical().Read("config/postge")
-	if err != nil || len(postgreConf.Warnings) != 0 {
-		logger.Errorf("can read config/postge key: %s; %+v", err, postgreConf.Warnings)
+	postgreConf, err := vault.Logical().Read("warscript-users/postgres")
+	logger.Println(postgreConf, err)
+	if err != nil || postgreConf == nil || len(postgreConf.Warnings) != 0 {
+		logger.Errorf("can read warscript-users/postges key: %+v; %+v", err, postgreConf)
 		return
 	}
-	redisConf, err := vault.Logical().Read("config/redis")
-	if err != nil || len(redisConf.Warnings) != 0 {
+	redisConf, err := vault.Logical().Read("warscript-users/redis")
+	if err != nil || redisConf == nil || len(redisConf.Warnings) != 0 {
 		logger.Errorf("can read config/redis key: %s; %+v", err, redisConf.Warnings)
 		return
 	}
