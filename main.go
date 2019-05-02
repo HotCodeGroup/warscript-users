@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -9,6 +11,7 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"
 
@@ -24,7 +27,63 @@ import (
 	vaultapi "github.com/hashicorp/vault/api"
 )
 
+type bound struct {
+	From int `json:"from"`
+	To   int `json:"to"`
+}
+
 var logger *logrus.Logger
+
+func findFree(consulCli *consulapi.Client, service string, b bound) (int, error) {
+	health, _, err := consulCli.Health().Service(service, "", false, nil)
+	if err != nil {
+		return -1, errors.Wrap(err, "can not get service health")
+	}
+
+	usedPorts := make(map[int]struct{})
+	for _, item := range health {
+		usedPorts[item.Service.Port] = struct{}{}
+	}
+
+	emptyPort := -1
+	for port := b.From; port <= b.To; port++ {
+		if _, ok := usedPorts[port]; !ok {
+			emptyPort = port
+			break
+		}
+	}
+	if emptyPort == -1 {
+		return -1, errors.New("no available ports")
+	}
+
+	return emptyPort, nil
+}
+
+//nolint: gocritic
+func getPorts(boundsKey string, consulCli *consulapi.Client) (int, int, error) {
+	kv, _, err := consulCli.KV().Get(boundsKey, nil)
+	if err != nil || kv == nil {
+		return -1, -1, errors.Wrap(err, "can not get key")
+	}
+
+	bounds := make(map[string]bound)
+	err = json.Unmarshal(kv.Value, &bounds)
+	if err != nil {
+		return -1, -1, errors.Wrap(err, "can not unmarshal bounds")
+	}
+
+	httpPort, err := findFree(consulCli, "warscript-users-http", bounds["http"])
+	if err != nil {
+		return -1, -1, errors.New("no available http ports")
+	}
+
+	grpcPort, err := findFree(consulCli, "warscript-users-grpc", bounds["grpc"])
+	if err != nil {
+		return -1, -1, errors.New("no available grpc ports")
+	}
+
+	return httpPort, grpcPort, nil
+}
 
 //nolint: gocyclo
 func main() {
@@ -40,6 +99,12 @@ func main() {
 	consul, err := consulapi.NewClient(consulConfig)
 	if err != nil {
 		logger.Errorf("can not connect consul service: %s", err)
+		return
+	}
+
+	httpPort, grpcPort, err := getPorts("warscript-users/bounds", consul)
+	if err != nil {
+		logger.Errorf("can not find empry port: %s", err)
 		return
 	}
 
@@ -63,12 +128,11 @@ func main() {
 		return
 	}
 
-	httpPortInt, _ := strconv.Atoi(os.Getenv("HTTP_PORT"))
-	httpServiceID := "auth_service_HTTP_127.0.0.1:" + os.Getenv("HTTP_PORT")
+	httpServiceID := fmt.Sprintf("warscript-users-http: %d", httpPort)
 	err = consul.Agent().ServiceRegister(&consulapi.AgentServiceRegistration{
 		ID:      httpServiceID,
-		Name:    "auth_service_http",
-		Port:    httpPortInt,
+		Name:    "warscript-users-http",
+		Port:    httpPort,
 		Address: "127.0.0.1",
 	})
 	defer func() {
@@ -79,12 +143,11 @@ func main() {
 		logger.Info("successfully derigister http service")
 	}()
 
-	grpcPortInt, _ := strconv.Atoi(os.Getenv("GRPC_PORT"))
-	grpcServiceID := "auth_service_GRPC_127.0.0.1:" + os.Getenv("GRPC_PORT")
+	grpcServiceID := fmt.Sprintf("warscript-users-grpc: %d", grpcPort)
 	err = consul.Agent().ServiceRegister(&consulapi.AgentServiceRegistration{
 		ID:      grpcServiceID,
-		Name:    "auth_service_grpc",
-		Port:    grpcPortInt,
+		Name:    "warscript-users-grpc",
+		Port:    grpcPort,
 		Address: "127.0.0.1",
 	})
 	defer func() {
@@ -112,8 +175,7 @@ func main() {
 	defer pgxConn.Close()
 
 	auth := &AuthManager{}
-	grpcPort := os.Getenv("GRPC_PORT")
-	listenGRPCPort, err := net.Listen("tcp", ":"+grpcPort)
+	listenGRPCPort, err := net.Listen("tcp", ":"+strconv.Itoa(grpcPort))
 	if err != nil {
 		logger.Errorf("grpc port listener error: %s", err)
 		return
@@ -121,10 +183,10 @@ func main() {
 
 	serverGRPCAuth := grpc.NewServer()
 	models.RegisterAuthServer(serverGRPCAuth, auth)
-	logger.Infof("Auth gRPC service successfully started at port %s", grpcPort)
+	logger.Infof("Auth gRPC service successfully started at port %d", grpcPort)
 	go func() {
 		if err = serverGRPCAuth.Serve(listenGRPCPort); err != nil {
-			logger.Fatalf("Auth gRPC service failed at port %s", grpcPort)
+			logger.Fatalf("Auth gRPC service failed at port %d", grpcPort)
 			os.Exit(1)
 		}
 	}()
@@ -147,9 +209,8 @@ func main() {
 		handlers.AllowCredentials(),
 	)
 
-	httpPort := os.Getenv("HTTP_PORT")
-	logger.Infof("Auth HTTP service successfully started at port %s", httpPort)
-	err = http.ListenAndServe(":"+httpPort,
+	logger.Infof("Auth HTTP service successfully started at port %d", httpPort)
+	err = http.ListenAndServe(":"+strconv.Itoa(httpPort),
 		corsMiddleware(middlewares.RecoverMiddleware(middlewares.AccessLogMiddleware(r, logger), logger)))
 	if err != nil {
 		logger.Errorf("cant start main server. err: %s", err.Error())
