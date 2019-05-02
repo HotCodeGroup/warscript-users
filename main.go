@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -18,10 +19,14 @@ import (
 	"github.com/HotCodeGroup/warscript-utils/redis"
 
 	"google.golang.org/grpc"
+
+	consulapi "github.com/hashicorp/consul/api"
+	vaultapi "github.com/hashicorp/vault/api"
 )
 
 var logger *logrus.Logger
 
+//nolint: gocyclo
 func main() {
 	var err error
 	logger, err = logging.NewLogger(os.Stdout, os.Getenv("LOGENTRIESRUS_TOKEN"))
@@ -30,15 +35,76 @@ func main() {
 		return
 	}
 
-	rediCli, err = redis.Connect(os.Getenv("STORAGE_USER"), os.Getenv("STORAGE_PASS"), os.Getenv("STORAGE_HOST"))
+	consulConfig := consulapi.DefaultConfig()
+	consulConfig.Address = os.Getenv("CONSUL_ADDR")
+	consul, err := consulapi.NewClient(consulConfig)
+	if err != nil {
+		logger.Errorf("can not connect consul service: %s", err)
+		return
+	}
+
+	vaultConfig := vaultapi.DefaultConfig()
+	vaultConfig.Address = os.Getenv("VAULT_ADDR")
+	vault, err := vaultapi.NewClient(vaultConfig)
+	if err != nil {
+		logger.Errorf("can not connect vault service: %s", err)
+		return
+	}
+
+	vault.SetToken(os.Getenv("VAULT_TOKEN"))
+	postgreConf, err := vault.Logical().Read("config/postge")
+	if err != nil || len(postgreConf.Warnings) != 0 {
+		logger.Errorf("can read config/postge key: %s; %+v", err, postgreConf.Warnings)
+		return
+	}
+	redisConf, err := vault.Logical().Read("config/redis")
+	if err != nil || len(redisConf.Warnings) != 0 {
+		logger.Errorf("can read config/redis key: %s; %+v", err, redisConf.Warnings)
+		return
+	}
+
+	httpPortInt, _ := strconv.Atoi(os.Getenv("HTTP_PORT"))
+	httpServiceID := "auth_service_HTTP_127.0.0.1:" + os.Getenv("HTTP_PORT")
+	err = consul.Agent().ServiceRegister(&consulapi.AgentServiceRegistration{
+		ID:      httpServiceID,
+		Name:    "auth_service_http",
+		Port:    httpPortInt,
+		Address: "127.0.0.1",
+	})
+	defer func() {
+		err = consul.Agent().ServiceDeregister(httpServiceID)
+		if err != nil {
+			logger.Errorf("can not derigister http service: %s", err)
+		}
+		logger.Info("successfully derigister http service")
+	}()
+
+	grpcPortInt, _ := strconv.Atoi(os.Getenv("GRPC_PORT"))
+	grpcServiceID := "auth_service_GRPC_127.0.0.1:" + os.Getenv("GRPC_PORT")
+	err = consul.Agent().ServiceRegister(&consulapi.AgentServiceRegistration{
+		ID:      grpcServiceID,
+		Name:    "auth_service_grpc",
+		Port:    grpcPortInt,
+		Address: "127.0.0.1",
+	})
+	defer func() {
+		err = consul.Agent().ServiceDeregister(grpcServiceID)
+		if err != nil {
+			logger.Errorf("can not derigister grpc service: %s", err)
+		}
+		logger.Info("successfully derigister grpc service")
+	}()
+
+	rediCli, err = redis.Connect(redisConf.Data["user"].(string),
+		redisConf.Data["pass"].(string), redisConf.Data["addr"].(string))
 	if err != nil {
 		logger.Errorf("can not connect redis: %s", err)
 		return
 	}
 	defer rediCli.Close()
 
-	pgxConn, err = postgresql.Connect(os.Getenv("DB_USER"), os.Getenv("DB_PASS"),
-		os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME"))
+	pgxConn, err = postgresql.Connect(postgreConf.Data["user"].(string), postgreConf.Data["pass"].(string),
+		postgreConf.Data["host"].(string), postgreConf.Data["port"].(string), postgreConf.Data["database"].(string))
 	if err != nil {
 		logger.Errorf("can not connect to postgresql database: %s", err.Error())
 		return
@@ -83,7 +149,8 @@ func main() {
 
 	httpPort := os.Getenv("HTTP_PORT")
 	logger.Infof("Auth HTTP service successfully started at port %s", httpPort)
-	err = http.ListenAndServe(":"+httpPort, corsMiddleware(r))
+	err = http.ListenAndServe(":"+httpPort,
+		corsMiddleware(middlewares.RecoverMiddleware(middlewares.AccessLogMiddleware(r, logger), logger)))
 	if err != nil {
 		logger.Errorf("cant start main server. err: %s", err.Error())
 		return
