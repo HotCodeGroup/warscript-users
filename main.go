@@ -128,7 +128,7 @@ func main() {
 		return
 	}
 
-	httpServiceID := fmt.Sprintf("warscript-users-http: %d", httpPort)
+	httpServiceID := fmt.Sprintf("warscript-users-http:%d", httpPort)
 	err = consul.Agent().ServiceRegister(&consulapi.AgentServiceRegistration{
 		ID:      httpServiceID,
 		Name:    "warscript-users-http",
@@ -143,7 +143,7 @@ func main() {
 		logger.Info("successfully derigister http service")
 	}()
 
-	grpcServiceID := fmt.Sprintf("warscript-users-grpc: %d", grpcPort)
+	grpcServiceID := fmt.Sprintf("warscript-users-grpc:%d", grpcPort)
 	err = consul.Agent().ServiceRegister(&consulapi.AgentServiceRegistration{
 		ID:      grpcServiceID,
 		Name:    "warscript-users-grpc",
