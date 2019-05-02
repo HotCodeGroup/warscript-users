@@ -53,7 +53,6 @@ func main() {
 
 	vault.SetToken(os.Getenv("VAULT_TOKEN"))
 	postgreConf, err := vault.Logical().Read("warscript-users/postgres")
-	logger.Println(postgreConf, err)
 	if err != nil || postgreConf == nil || len(postgreConf.Warnings) != 0 {
 		logger.Errorf("can read warscript-users/postges key: %+v; %+v", err, postgreConf)
 		return
