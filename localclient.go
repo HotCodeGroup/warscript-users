@@ -25,3 +25,8 @@ func (c *LocalAuthClient) GetSessionInfo(ctx context.Context,
 		ID: payload.ID,
 	}, nil
 }
+
+func (c *LocalAuthClient) GetUsersByIDs(ctx context.Context,
+	in *models.UserIDs, opts ...grpc.CallOption) (*models.InfoUsers, error) {
+	return nil, nil
+}

@@ -49,3 +49,7 @@ func (m *AuthManager) GetSessionInfo(ctx context.Context, token *models.SessionT
 		ID: payload.ID,
 	}, nil
 }
+
+func (m *AuthManager) GetUsersByIDs(context.Context, *models.UserIDs) (*models.InfoUsers, error) {
+	return nil, nil
+}

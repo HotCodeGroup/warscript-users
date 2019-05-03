@@ -6,6 +6,10 @@ github.com/HotCodeGroup/warscript-utils v0.0.0-20190428100847-cde473768f6e h1:fl
 github.com/HotCodeGroup/warscript-utils v0.0.0-20190428100847-cde473768f6e/go.mod h1:ni0SgKU8mYZMxD8BqTGr2dMDtsCDCwy0ZXe+no9PkUQ=
 github.com/HotCodeGroup/warscript-utils v0.0.0-20190501123719-e897c23d1ccc h1:96JTewioIVWqlyWueTEX5jOrqmCkha/ktozGWx6ccr0=
 github.com/HotCodeGroup/warscript-utils v0.0.0-20190501123719-e897c23d1ccc/go.mod h1:jlB2/oOpNLRnrFC4zEmsIP1793sEUWeujwLEu5cKtfU=
+github.com/HotCodeGroup/warscript-utils v0.0.0-20190503161822-5dfbb362dcb6 h1:6EF6R7FPqUXxiIn5k6l1Tw1PLAvfW5pFAonqEBZitoM=
+github.com/HotCodeGroup/warscript-utils v0.0.0-20190503161822-5dfbb362dcb6/go.mod h1:jlB2/oOpNLRnrFC4zEmsIP1793sEUWeujwLEu5cKtfU=
+github.com/HotCodeGroup/warscript-utils v0.0.0-20190503161944-93e911069855 h1:O10bgZe3yklySTOkNkjYpi0KIII+lTnP1yyU9GPb4RI=
+github.com/HotCodeGroup/warscript-utils v0.0.0-20190503161944-93e911069855/go.mod h1:jlB2/oOpNLRnrFC4zEmsIP1793sEUWeujwLEu5cKtfU=
 github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e/go.mod h1:3U/XgcO3hCbHZ8TKRvWD2dDTCfh9M9ya+I9JpbB7O8o=
 github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da h1:8GUt8eRujhVEGZFFEjBj46YV4rDjvGrNxb0KMWYkL2I=
 github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da/go.mod h1:Q73ZrmVTwzkszR9V5SSuryQ31EELlFMUz1kKyl939pY=
