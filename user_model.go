@@ -64,6 +64,7 @@ func (us *AccessObject) Create(u *UserModel) error {
 	if err != nil {
 		return errors.Wrap(err, "can not open user create transaction")
 	}
+	//nolint:errcheck
 	defer tx.Rollback()
 
 	_, err = us.getUserImpl(tx, "username", u.Username.String)
@@ -104,6 +105,7 @@ func (us *AccessObject) Save(u *UserModel) error {
 	if err != nil {
 		return errors.Wrap(err, "can not open 'user Save' transaction")
 	}
+	//nolint:errcheck
 	defer tx.Rollback()
 
 	du, err := us.getUserImpl(tx, "username", u.Username.String)

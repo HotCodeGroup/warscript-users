@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/HotCodeGroup/warscript-utils/models"
 	"github.com/HotCodeGroup/warscript-utils/utils"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/pgtype"
@@ -29,7 +30,7 @@ func getInfoUserByIDImpl(id int64) (*InfoUser, error) {
 }
 
 //nolint: gocyclo
-func updateUserImpl(info *SessionPayload, updateForm *FormUserUpdate) error {
+func updateUserImpl(info *models.SessionPayload, updateForm *FormUserUpdate) error {
 	if err := updateForm.Validate(); err != nil {
 		return err
 	}

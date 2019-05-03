@@ -12,10 +12,10 @@ import (
 )
 
 // SessionInfo достаёт инфу о юзере из контекстаs
-func SessionInfo(r *http.Request) *SessionPayload {
+func SessionInfo(r *http.Request) *models.SessionPayload {
 	if rv := r.Context().Value(middlewares.SessionInfoKey); rv != nil {
 		if rInfo, ok := rv.(*models.SessionPayload); ok {
-			return &SessionPayload{rInfo.ID}
+			return rInfo
 		}
 	}
 
