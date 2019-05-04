@@ -34,6 +34,32 @@ func (m *AuthManager) GetUserByID(ctx context.Context, userID *models.UserID) (*
 	}, nil
 }
 
+func (m *AuthManager) GetUserByUsername(ctx context.Context, username *models.Username) (*models.InfoUser, error) {
+	logger := logger.WithFields(logrus.Fields{
+		"method":   "grpc_GetUserByID",
+		"username": username.Username,
+	})
+
+	usr, err := Users.GetUserByUsername(username.Username)
+	if err != nil {
+		logger.Errorf("can not get user by id: %s", err)
+		return nil, errors.Wrap(err, "can not get user by id")
+	}
+
+	photoUUID := ""
+	if usr.PhotoUUID.Status == pgtype.Present {
+		photoUUID = uuid.UUID(usr.PhotoUUID.Bytes).String()
+	}
+
+	logger.Info("successfull")
+	return &models.InfoUser{
+		ID:        usr.ID.Int,
+		Username:  usr.Username.String,
+		PhotoUUID: photoUUID,
+		Active:    usr.Active.Bool,
+	}, nil
+}
+
 func (m *AuthManager) GetSessionInfo(ctx context.Context, token *models.SessionToken) (*models.SessionPayload, error) {
 	logger := logger.WithFields(logrus.Fields{
 		"method": "grpc_GetSessionInfo",

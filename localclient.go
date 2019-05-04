@@ -14,6 +14,11 @@ func (c *LocalAuthClient) GetUserByID(ctx context.Context,
 	return nil, nil
 }
 
+func (c *LocalAuthClient) GetUserByUsername(ctx context.Context,
+	in *models.Username, opts ...grpc.CallOption) (*models.InfoUser, error) {
+	return nil, nil
+}
+
 func (c *LocalAuthClient) GetSessionInfo(ctx context.Context,
 	in *models.SessionToken, opts ...grpc.CallOption) (*models.SessionPayload, error) {
 	payload, err := getSessionImpl(in.Token)

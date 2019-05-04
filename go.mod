@@ -3,7 +3,7 @@ module github.com/HotCodeGroup/warscript-users
 go 1.12
 
 require (
-	github.com/HotCodeGroup/warscript-utils v0.0.0-20190503182236-4f89cddc3802
+	github.com/HotCodeGroup/warscript-utils v0.0.0-20190504211345-1a79c3bbaa15
 	github.com/go-park-mail-ru/2019_1_HotCode v0.0.0-20190426172604-1d3ce9818cea
 	github.com/go-redis/redis v6.15.2+incompatible
 	github.com/golang/protobuf v1.3.1
