@@ -193,7 +193,7 @@ func (us *AccessObject) GetUsersByIDs(ids []int64) ([]*UserModel, error) {
 	}
 
 	rows, err := pgxConn.Query(`SELECT u.id, u.username, u.password,
-	 					u.active, u.photo_uuid FROM users u WHERE id IN ($1);`, idsPg)
+	 					u.active, u.photo_uuid FROM users u WHERE id IN ($1);`, &idsPg)
 	if err != nil {
 		return nil, errors.Wrap(err, "can not get users")
 	}
