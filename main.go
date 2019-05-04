@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -69,35 +70,35 @@ func main() {
 		return
 	}
 
-	// httpServiceID := fmt.Sprintf("warscript-users-http:%d", httpPort)
-	// err = consul.Agent().ServiceRegister(&consulapi.AgentServiceRegistration{
-	// 	ID:      httpServiceID,
-	// 	Name:    "warscript-users-http",
-	// 	Port:    httpPort,
-	// 	Address: "127.0.0.1",
-	// })
-	// defer func() {
-	// 	err = consul.Agent().ServiceDeregister(httpServiceID)
-	// 	if err != nil {
-	// 		logger.Errorf("can not derigister http service: %s", err)
-	// 	}
-	// 	logger.Info("successfully derigister http service")
-	// }()
+	httpServiceID := fmt.Sprintf("warscript-users-http:%d", httpPort)
+	err = consul.Agent().ServiceRegister(&consulapi.AgentServiceRegistration{
+		ID:      httpServiceID,
+		Name:    "warscript-users-http",
+		Port:    httpPort,
+		Address: "127.0.0.1",
+	})
+	defer func() {
+		err = consul.Agent().ServiceDeregister(httpServiceID)
+		if err != nil {
+			logger.Errorf("can not derigister http service: %s", err)
+		}
+		logger.Info("successfully derigister http service")
+	}()
 
-	// grpcServiceID := fmt.Sprintf("warscript-users-grpc:%d", grpcPort)
-	// err = consul.Agent().ServiceRegister(&consulapi.AgentServiceRegistration{
-	// 	ID:      grpcServiceID,
-	// 	Name:    "warscript-users-grpc",
-	// 	Port:    grpcPort,
-	// 	Address: "127.0.0.1",
-	// })
-	// defer func() {
-	// 	err = consul.Agent().ServiceDeregister(grpcServiceID)
-	// 	if err != nil {
-	// 		logger.Errorf("can not derigister grpc service: %s", err)
-	// 	}
-	// 	logger.Info("successfully derigister grpc service")
-	// }()
+	grpcServiceID := fmt.Sprintf("warscript-users-grpc:%d", grpcPort)
+	err = consul.Agent().ServiceRegister(&consulapi.AgentServiceRegistration{
+		ID:      grpcServiceID,
+		Name:    "warscript-users-grpc",
+		Port:    grpcPort,
+		Address: "127.0.0.1",
+	})
+	defer func() {
+		err = consul.Agent().ServiceDeregister(grpcServiceID)
+		if err != nil {
+			logger.Errorf("can not derigister grpc service: %s", err)
+		}
+		logger.Info("successfully derigister grpc service")
+	}()
 
 	rediCli, err = redis.Connect(redisConf.Data["user"].(string),
 		redisConf.Data["pass"].(string), redisConf.Data["addr"].(string))
