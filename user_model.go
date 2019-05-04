@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/HotCodeGroup/warscript-utils/utils"
 
@@ -185,15 +187,14 @@ func (us *AccessObject) getUserImpl(q Queryer, field, value string) (*UserModel,
 }
 
 func (us *AccessObject) GetUsersByIDs(ids []int64) ([]*UserModel, error) {
-	idsPg := pgtype.Int8Array{
-		Elements: make([]pgtype.Int8, 0, len(ids)),
-	}
-	for _, id := range ids {
-		idsPg.Elements = append(idsPg.Elements, pgtype.Int8{Int: id, Status: pgtype.Present})
+	placeholders := make([]string, len(ids))
+	for i, id := range ids {
+		placeholders[i] = strconv.FormatInt(id, 10)
 	}
 
-	rows, err := pgxConn.Query(`SELECT u.id, u.username, u.password,
-	 					u.active, u.photo_uuid FROM users u WHERE id IN ($1);`, &idsPg)
+	//nolint: gosec тут точно инты и никакие хакеры ничего не сломают
+	rows, err := pgxConn.Query(fmt.Sprintf(`SELECT u.id, u.username, u.password,
+	 					u.active, u.photo_uuid FROM users u WHERE id IN (%s);`, strings.Join(placeholders, ",")))
 	if err != nil {
 		return nil, errors.Wrap(err, "can not get users")
 	}
