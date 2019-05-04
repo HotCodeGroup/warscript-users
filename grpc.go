@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/pgtype"
 	"github.com/sirupsen/logrus"
 
 	"github.com/HotCodeGroup/warscript-utils/models"
@@ -50,6 +52,41 @@ func (m *AuthManager) GetSessionInfo(ctx context.Context, token *models.SessionT
 	}, nil
 }
 
-func (m *AuthManager) GetUsersByIDs(context.Context, *models.UserIDs) (*models.InfoUsers, error) {
-	return nil, nil
+func (m *AuthManager) GetUsersByIDs(ctx context.Context, idsM *models.UserIDs) (*models.InfoUsers, error) {
+	logger := logger.WithFields(logrus.Fields{
+		"method": "grpc_GetUsersByIDs",
+	})
+
+	ids := make([]int64, len(idsM.IDs))
+	for i, id := range idsM.IDs {
+		ids[i] = id.ID
+	}
+
+	users, err := Users.GetUsersByIDs(ids)
+	if err != nil {
+		logger.Errorf("can not get users by ids: %s", err)
+		return nil, errors.Wrap(err, "can not get users by ids")
+	}
+
+	usersM := &models.InfoUsers{
+		Users: make([]*models.InfoUser, 0, len(users)),
+	}
+	for _, u := range users {
+		photoUUID := ""
+		if u.PhotoUUID.Status == pgtype.Present {
+			photoUUID = uuid.UUID(u.PhotoUUID.Bytes).String()
+		}
+
+		uM := &models.InfoUser{
+			ID:        u.ID.Int,
+			Username:  u.Username.String,
+			PhotoUUID: photoUUID,
+			Active:    u.Active.Bool,
+		}
+
+		usersM.Users = append(usersM.Users, uM)
+	}
+
+	logger.Info("successfull")
+	return usersM, nil
 }

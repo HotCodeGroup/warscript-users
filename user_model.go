@@ -23,6 +23,7 @@ type Queryer interface {
 type UserAccessObject interface {
 	GetUserByID(id int64) (*UserModel, error)
 	GetUserByUsername(username string) (*UserModel, error)
+	GetUsersByIDs(ids []int64) ([]*UserModel, error)
 
 	Create(u *UserModel) error
 	Save(u *UserModel) error
@@ -181,4 +182,35 @@ func (us *AccessObject) getUserImpl(q Queryer, field, value string) (*UserModel,
 	}
 
 	return u, nil
+}
+
+func (us *AccessObject) GetUsersByIDs(ids []int64) ([]*UserModel, error) {
+	idsPg := pgtype.Int8Array{
+		Elements: make([]pgtype.Int8, 0, len(ids)),
+	}
+	for _, id := range ids {
+		idsPg.Elements = append(idsPg.Elements, pgtype.Int8{Int: id, Status: pgtype.Present})
+	}
+
+	rows, err := pgxConn.Query(`SELECT u.id, u.username, u.password,
+	 					u.active, u.photo_uuid FROM users u WHERE id IN ($1);`, idsPg.Elements)
+	if err != nil {
+		return nil, errors.Wrap(err, "can not get users")
+	}
+	defer rows.Close()
+
+	users := make([]*UserModel, 0)
+	for rows.Next() {
+		u := &UserModel{}
+		err = rows.Scan(&u.ID, &u.Username,
+			&u.PasswordCrypt, &u.Active,
+			&u.PhotoUUID)
+		if err != nil {
+			return nil, errors.Wrap(err, "scan user error")
+		}
+
+		users = append(users, u)
+	}
+
+	return users, nil
 }
