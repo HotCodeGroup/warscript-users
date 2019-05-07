@@ -9,6 +9,8 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	"github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"
 
@@ -135,6 +137,8 @@ func main() {
 
 	localGRPCAuth := &LocalAuthClient{}
 	r := mux.NewRouter().PathPrefix("/v1").Subrouter()
+	r.Handle("/metrics", promhttp.Handler())
+
 	r.HandleFunc("/sessions", middlewares.WithAuthentication(GetSession, logger, localGRPCAuth)).Methods("GET")
 	r.HandleFunc("/sessions", CreateSession).Methods("POST")
 	r.HandleFunc("/sessions", middlewares.WithAuthentication(DeleteSession, logger, localGRPCAuth)).Methods("DELETE")

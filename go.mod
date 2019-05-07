@@ -16,6 +16,7 @@ require (
 	github.com/jcftang/logentriesrus v0.0.0-20170718201731-9bf66587097e
 	github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983
 	github.com/pkg/errors v0.8.1
+	github.com/prometheus/client_golang v0.9.2
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.4.1
 	golang.org/x/crypto v0.0.0-20190426145343-a29dc8fdc734
