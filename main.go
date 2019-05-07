@@ -9,7 +9,6 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"
@@ -22,6 +21,8 @@ import (
 	"github.com/HotCodeGroup/warscript-utils/redis"
 
 	"google.golang.org/grpc"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	consulapi "github.com/hashicorp/consul/api"
 	vaultapi "github.com/hashicorp/vault/api"
@@ -137,7 +138,6 @@ func main() {
 
 	localGRPCAuth := &LocalAuthClient{}
 	r := mux.NewRouter().PathPrefix("/v1").Subrouter()
-	r.Handle("/metrics", promhttp.Handler())
 
 	r.HandleFunc("/sessions", middlewares.WithAuthentication(GetSession, logger, localGRPCAuth)).Methods("GET")
 	r.HandleFunc("/sessions", CreateSession).Methods("POST")
@@ -148,9 +148,11 @@ func main() {
 	r.HandleFunc("/users/{user_id:[0-9]+}", GetUser).Methods("GET")
 	r.HandleFunc("/users/used", middlewares.WithLimiter(CheckUsername, rate.NewLimiter(3, 5), logger)).Methods("POST")
 
+	http.Handle("/metrics", promhttp.Handler())
+	http.Handle("/", middlewares.RecoverMiddleware(middlewares.AccessLogMiddleware(r, logger), logger))
+
 	logger.Infof("Auth HTTP service successfully started at port %d", httpPort)
-	err = http.ListenAndServe(":"+strconv.Itoa(httpPort),
-		middlewares.RecoverMiddleware(middlewares.AccessLogMiddleware(r, logger), logger))
+	err = http.ListenAndServe(":"+strconv.Itoa(httpPort), nil)
 	if err != nil {
 		logger.Errorf("cant start main server. err: %s", err.Error())
 		return
