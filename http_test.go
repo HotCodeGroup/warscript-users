@@ -35,23 +35,23 @@ func runTableAPITests(t *testing.T, cases []*UserTestCase) {
 
 func runAPITest(t *testing.T, i int, c *UserTestCase) {
 	if c.FailureUser != nil {
-		Users.(*UsersTest).SetNextFail(c.FailureUser)
+		Users.(*usersTest).SetNextFail(c.FailureUser)
 	}
 
 	if c.FailureSession != nil {
-		Sessions.(*SessionsTest).SetNextFail(c.FailureSession)
+		Sessions.(*sessionsTest).SetNextFail(c.FailureSession)
 	}
 
 	testutils.RunAPITest(t, i, &c.Case)
 }
 
 func initTests() {
-	Users = &UsersTest{
+	Users = &usersTest{
 		ids:   1,
 		users: make(map[int64]UserModel),
 	}
 
-	Sessions = &SessionsTest{
+	Sessions = &sessionsTest{
 		sessions: make(map[string][]byte),
 	}
 }

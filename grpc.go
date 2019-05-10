@@ -9,8 +9,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+// AuthManager реализует интерфейс GPRC сервера
 type AuthManager struct{}
 
+// GetUserByID получает одного юзера по ID
 func (m *AuthManager) GetUserByID(ctx context.Context, userID *models.UserID) (*models.InfoUser, error) {
 	logger := logger.WithFields(logrus.Fields{
 		"method":  "grpc_GetUserByID",
@@ -23,7 +25,7 @@ func (m *AuthManager) GetUserByID(ctx context.Context, userID *models.UserID) (*
 		return nil, errors.Wrap(err, "can not get user by id")
 	}
 
-	logger.Info("successfull")
+	logger.Info("successful")
 	return &models.InfoUser{
 		ID:        usr.ID,
 		Username:  usr.Username,
@@ -32,6 +34,7 @@ func (m *AuthManager) GetUserByID(ctx context.Context, userID *models.UserID) (*
 	}, nil
 }
 
+// GetUserByUsername получает одного юзера по username
 func (m *AuthManager) GetUserByUsername(ctx context.Context, username *models.Username) (*models.InfoUser, error) {
 	logger := logger.WithFields(logrus.Fields{
 		"method":   "grpc_GetUserByID",
@@ -44,7 +47,7 @@ func (m *AuthManager) GetUserByUsername(ctx context.Context, username *models.Us
 		return nil, errors.Wrap(err, "can not get user by id")
 	}
 
-	logger.Info("successfull")
+	logger.Info("successful")
 	return &models.InfoUser{
 		ID:        usr.ID,
 		Username:  usr.Username,
@@ -53,6 +56,7 @@ func (m *AuthManager) GetUserByUsername(ctx context.Context, username *models.Us
 	}, nil
 }
 
+// GetSessionInfo получает информацию о сессии из редис по токену
 func (m *AuthManager) GetSessionInfo(ctx context.Context, token *models.SessionToken) (*models.SessionPayload, error) {
 	logger := logger.WithFields(logrus.Fields{
 		"method": "grpc_GetSessionInfo",
@@ -65,12 +69,13 @@ func (m *AuthManager) GetSessionInfo(ctx context.Context, token *models.SessionT
 		return nil, errors.Wrap(err, "can not get session by token")
 	}
 
-	logger.Info("successfull")
+	logger.Info("successful")
 	return &models.SessionPayload{
 		ID: payload.ID,
 	}, nil
 }
 
+// GetUsersByIDs получает массив юзеров по массиву их ID
 func (m *AuthManager) GetUsersByIDs(ctx context.Context, idsM *models.UserIDs) (*models.InfoUsers, error) {
 	logger := logger.WithFields(logrus.Fields{
 		"method": "grpc_GetUsersByIDs",
@@ -101,6 +106,6 @@ func (m *AuthManager) GetUsersByIDs(ctx context.Context, idsM *models.UserIDs) (
 		usersM.Users = append(usersM.Users, uM)
 	}
 
-	logger.Info("successfull")
+	logger.Info("successful")
 	return usersM, nil
 }

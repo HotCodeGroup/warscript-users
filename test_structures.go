@@ -6,20 +6,20 @@ import (
 	"github.com/pkg/errors"
 )
 
-type UsersTest struct {
+type usersTest struct {
 	ids   int64
 	users map[int64]UserModel
 
 	testutils.Failer
 }
 
-func (u *UsersTest) nextID() int64 {
+func (u *usersTest) nextID() int64 {
 	u.ids++
 	return u.ids - 1
 }
 
 // Create создаёт запись в базе с новыми полями
-func (u *UsersTest) Create(m *UserModel) error {
+func (u *usersTest) Create(m *UserModel) error {
 	if err := u.NextFail(); err != nil {
 		return err
 	}
@@ -32,7 +32,7 @@ func (u *UsersTest) Create(m *UserModel) error {
 }
 
 // Save сохраняет юзера в базу
-func (u *UsersTest) Save(m *UserModel) error {
+func (u *usersTest) Save(m *UserModel) error {
 	if err := u.NextFail(); err != nil {
 		return err
 	}
@@ -42,12 +42,12 @@ func (u *UsersTest) Save(m *UserModel) error {
 }
 
 // CheckPassword проверяет пароль у юзера и сохранённый в модели
-func (u *UsersTest) CheckPassword(m *UserModel, password string) bool {
+func (u *usersTest) CheckPassword(m *UserModel, password string) bool {
 	return *m.Password == password
 }
 
 // GetUserByID получает юзера по id
-func (u *UsersTest) GetUserByID(id int64) (*UserModel, error) {
+func (u *usersTest) GetUserByID(id int64) (*UserModel, error) {
 	if err := u.NextFail(); err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (u *UsersTest) GetUserByID(id int64) (*UserModel, error) {
 }
 
 // GetUserByUsername получает юзера по имени
-func (u *UsersTest) GetUserByUsername(username string) (*UserModel, error) {
+func (u *usersTest) GetUserByUsername(username string) (*UserModel, error) {
 	if err := u.NextFail(); err != nil {
 		return nil, err
 	}
@@ -83,8 +83,8 @@ func (u *UsersTest) GetUserByUsername(username string) (*UserModel, error) {
 	return &m, nil
 }
 
-// GetUserByUsername получает юзера по имени
-func (u *UsersTest) GetUsersByIDs(ids []int64) ([]*UserModel, error) {
+// GetUsersByIDs получает юзеров по массиву айдишников
+func (u *usersTest) GetUsersByIDs(ids []int64) ([]*UserModel, error) {
 	if err := u.NextFail(); err != nil {
 		return nil, err
 	}
@@ -103,7 +103,7 @@ func (u *UsersTest) GetUsersByIDs(ids []int64) ([]*UserModel, error) {
 	return users, nil
 }
 
-type SessionsTest struct {
+type sessionsTest struct {
 	sessions map[string][]byte
 
 	testutils.Failer
@@ -111,7 +111,7 @@ type SessionsTest struct {
 
 // Set валидирует и сохраняет сессию в хранилище по сгенерированному токену
 // Токен сохраняется в s.Token
-func (ss *SessionsTest) Set(s *Session) error {
+func (ss *sessionsTest) Set(s *Session) error {
 	if err := ss.NextFail(); err != nil {
 		return err
 	}
@@ -121,7 +121,7 @@ func (ss *SessionsTest) Set(s *Session) error {
 }
 
 // Delete удаляет сессию с токен s.Token из хранилища
-func (ss *SessionsTest) Delete(s *Session) error {
+func (ss *sessionsTest) Delete(s *Session) error {
 	if err := ss.NextFail(); err != nil {
 		return err
 	}
@@ -131,7 +131,7 @@ func (ss *SessionsTest) Delete(s *Session) error {
 }
 
 // GetSession получает сессию из хранилища по токену
-func (ss *SessionsTest) GetSession(token string) (*Session, error) {
+func (ss *sessionsTest) GetSession(token string) (*Session, error) {
 	if err := ss.NextFail(); err != nil {
 		return nil, err
 	}

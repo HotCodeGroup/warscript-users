@@ -19,9 +19,10 @@ type SessionAccessObject interface {
 	GetSession(token string) (*Session, error)
 }
 
-// SessionsDB implementation of SessionAccessObject
+// SessionConn implementation of SessionAccessObject
 type SessionConn struct{}
 
+// Sessions interface variable for models methods
 var Sessions SessionAccessObject
 
 func init() {

@@ -22,7 +22,7 @@ func init() {
 func TestGetUserByID(t *testing.T) {
 	m := &AuthManager{}
 
-	Users = &UsersTest{
+	Users = &usersTest{
 		ids: 1,
 		users: map[int64]UserModel{
 			1: {
@@ -67,7 +67,7 @@ func TestGetUserByID(t *testing.T) {
 func TestGetUserByUsername(t *testing.T) {
 	m := &AuthManager{}
 
-	Users = &UsersTest{
+	Users = &usersTest{
 		ids: 1,
 		users: map[int64]UserModel{
 			1: {
@@ -114,7 +114,7 @@ func TestGetUserByUsername(t *testing.T) {
 func TestGetSessionInfo(t *testing.T) {
 	m := &AuthManager{}
 
-	Sessions = &SessionsTest{
+	Sessions = &sessionsTest{
 		sessions: map[string][]byte{
 			"1234": []byte(`{"id":1}`),
 		},
@@ -152,7 +152,7 @@ func TestGetSessionInfo(t *testing.T) {
 func TestGetUsersByIDs(t *testing.T) {
 	m := &AuthManager{}
 
-	Users = &UsersTest{
+	Users = &usersTest{
 		ids: 2,
 		users: map[int64]UserModel{
 			1: {
@@ -169,7 +169,7 @@ func TestGetUsersByIDs(t *testing.T) {
 		},
 	}
 
-	Users.(*UsersTest).SetNextFail(utils.ErrInternal)
+	Users.(*usersTest).SetNextFail(utils.ErrInternal)
 
 	cases := []struct {
 		ids           *models.UserIDs

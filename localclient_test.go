@@ -12,7 +12,7 @@ import (
 func TestLocalAuthClientOK(t *testing.T) {
 	c := &LocalAuthClient{}
 
-	Sessions = &SessionsTest{
+	Sessions = &sessionsTest{
 		sessions: map[string][]byte{
 			"1234": []byte(`{"id":1}`),
 		},
@@ -36,13 +36,13 @@ func TestLocalAuthClientOK(t *testing.T) {
 func TestLocalAuthClientErr(t *testing.T) {
 	c := &LocalAuthClient{}
 
-	Sessions = &SessionsTest{
+	Sessions = &sessionsTest{
 		sessions: map[string][]byte{
 			"1234": []byte(`{"id":1}`),
 		},
 	}
 
-	Sessions.(*SessionsTest).SetNextFail(utils.ErrInternal)
+	Sessions.(*sessionsTest).SetNextFail(utils.ErrInternal)
 
 	_, err := c.GetSessionInfo(context.Background(), &models.SessionToken{
 		Token: "1234",

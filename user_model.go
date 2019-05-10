@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/HotCodeGroup/warscript-utils/postgresql"
 	"github.com/HotCodeGroup/warscript-utils/utils"
 
 	"github.com/pkg/errors"
@@ -16,10 +17,6 @@ import (
 )
 
 var pqConn *sql.DB
-
-type Queryer interface {
-	QueryRow(string, ...interface{}) *sql.Row
-}
 
 // UserAccessObject DAO for User model
 type UserAccessObject interface {
@@ -35,13 +32,14 @@ type UserAccessObject interface {
 // AccessObject implementation of UserAccessObject
 type AccessObject struct{}
 
+// Users interface variable for models methods
 var Users UserAccessObject
 
 func init() {
 	Users = &AccessObject{}
 }
 
-// User model for users table
+// UserModel model for users table
 type UserModel struct {
 	ID            int64
 	Username      string
@@ -51,6 +49,7 @@ type UserModel struct {
 	PasswordCrypt []byte // внутренний хеш для проверки
 }
 
+// GetPhotoUUID возвращает photoUUID или пустую строку, если его нет в базе
 func (u *UserModel) GetPhotoUUID() string {
 	if u.PhotoUUID.Valid {
 		return u.PhotoUUID.String
@@ -176,7 +175,7 @@ func (us *AccessObject) GetUserByUsername(username string) (*UserModel, error) {
 }
 
 //nolint: gosec
-func (us *AccessObject) getUserImpl(q Queryer, field, value string) (*UserModel, error) {
+func (us *AccessObject) getUserImpl(q postgresql.Queryer, field, value string) (*UserModel, error) {
 	u := &UserModel{}
 
 	row := q.QueryRow(`SELECT u.id, u.username, u.password,
@@ -188,6 +187,7 @@ func (us *AccessObject) getUserImpl(q Queryer, field, value string) (*UserModel,
 	return u, nil
 }
 
+// GetUsersByIDs получает список юзеров по массиву ID
 func (us *AccessObject) GetUsersByIDs(ids []int64) ([]*UserModel, error) {
 	placeholders := make([]string, len(ids))
 	for i, id := range ids {
