@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/pgtype"
 	"github.com/sirupsen/logrus"
 
 	"github.com/HotCodeGroup/warscript-utils/models"
@@ -46,17 +44,12 @@ func (m *AuthManager) GetUserByUsername(ctx context.Context, username *models.Us
 		return nil, errors.Wrap(err, "can not get user by id")
 	}
 
-	photoUUID := ""
-	if usr.PhotoUUID.Status == pgtype.Present {
-		photoUUID = uuid.UUID(usr.PhotoUUID.Bytes).String()
-	}
-
 	logger.Info("successfull")
 	return &models.InfoUser{
-		ID:        usr.ID.Int,
-		Username:  usr.Username.String,
-		PhotoUUID: photoUUID,
-		Active:    usr.Active.Bool,
+		ID:        usr.ID,
+		Username:  usr.Username,
+		PhotoUUID: usr.GetPhotoUUID(),
+		Active:    usr.Active,
 	}, nil
 }
 
@@ -98,16 +91,11 @@ func (m *AuthManager) GetUsersByIDs(ctx context.Context, idsM *models.UserIDs) (
 		Users: make([]*models.InfoUser, 0, len(users)),
 	}
 	for _, u := range users {
-		photoUUID := ""
-		if u.PhotoUUID.Status == pgtype.Present {
-			photoUUID = uuid.UUID(u.PhotoUUID.Bytes).String()
-		}
-
 		uM := &models.InfoUser{
-			ID:        u.ID.Int,
-			Username:  u.Username.String,
-			PhotoUUID: photoUUID,
-			Active:    u.Active.Bool,
+			ID:        u.ID,
+			Username:  u.Username,
+			PhotoUUID: u.GetPhotoUUID(),
+			Active:    u.Active,
 		}
 
 		usersM.Users = append(usersM.Users, uM)

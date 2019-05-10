@@ -6,19 +6,20 @@ import (
 	"strings"
 
 	"github.com/HotCodeGroup/warscript-utils/utils"
-
-	"github.com/jackc/pgx"
-	"github.com/jackc/pgx/pgtype"
+	"github.com/google/uuid"
 
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
+
+	"database/sql"
+
+	_ "github.com/lib/pq"
 )
 
-// conn коннект к базе данных
-var pgxConn *pgx.ConnPool
+var pqConn *sql.DB
 
 type Queryer interface {
-	QueryRow(string, ...interface{}) *pgx.Row
+	QueryRow(string, ...interface{}) *sql.Row
 }
 
 // UserAccessObject DAO for User model
@@ -43,49 +44,58 @@ func init() {
 
 // User model for users table
 type UserModel struct {
-	ID            pgtype.Int8
-	Username      pgtype.Varchar
-	PhotoUUID     pgtype.UUID
+	ID            int64
+	Username      string
+	PhotoUUID     []byte
 	Password      *string // строка для сохранения
-	Active        pgtype.Bool
-	PasswordCrypt pgtype.Bytea // внутренний хеш для проверки
+	Active        bool
+	PasswordCrypt []byte // внутренний хеш для проверки
+}
+
+func (u *UserModel) GetPhotoUUID() string {
+	photoUUID := ""
+	if u.PhotoUUID != nil {
+		tmpUUID, err := uuid.FromBytes(u.PhotoUUID)
+		if err == nil { // если с ошибкой, то просто не отдаём афку
+			photoUUID = tmpUUID.String()
+		}
+	}
+
+	return photoUUID
 }
 
 // Create создаёт запись в базе с новыми полями
 func (us *AccessObject) Create(u *UserModel) error {
 	var err error
-	hashedPass, err := bcrypt.GenerateFromPassword([]byte(*u.Password), bcrypt.MinCost)
+	u.PasswordCrypt, err = bcrypt.GenerateFromPassword([]byte(*u.Password), bcrypt.MinCost)
 	if err != nil {
-		return errors.Wrap(err, "password generate error")
-	}
-	u.PasswordCrypt = pgtype.Bytea{
-		Bytes:  hashedPass,
-		Status: pgtype.Present,
+		return errors.Wrapf(utils.ErrInternal, "password generate error: %s", err.Error())
 	}
 
-	tx, err := pgxConn.Begin()
+	tx, err := pqConn.Begin()
 	if err != nil {
-		return errors.Wrap(err, "can not open user create transaction")
+		return errors.Wrapf(utils.ErrInternal, "can not open user create transaction: %s", err.Error())
 	}
 	//nolint:errcheck
 	defer tx.Rollback()
 
-	_, err = us.getUserImpl(tx, "username", u.Username.String)
-	if err != pgx.ErrNoRows {
+	_, err = us.getUserImpl(tx, "username", u.Username)
+	if err != sql.ErrNoRows {
 		if err == nil {
 			return utils.ErrTaken
 		}
-		return errors.Wrap(err, "select duplicate errors")
+
+		return errors.Wrapf(utils.ErrInternal, "check duplicate error: %s", err.Error())
 	}
 
 	_, err = tx.Exec(`INSERT INTO users (username, password) VALUES($1, $2);`, &u.Username, &u.PasswordCrypt)
 	if err != nil {
-		return errors.Wrap(err, "user create error")
+		return errors.Wrapf(utils.ErrInternal, "user create error: %s", err.Error())
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return errors.Wrap(err, "user create transaction commit error")
+		return errors.Wrapf(utils.ErrInternal, "user create transaction commit error: %s", err.Error())
 	}
 
 	return nil
@@ -93,29 +103,26 @@ func (us *AccessObject) Create(u *UserModel) error {
 
 // Save сохраняет юзера в базу
 func (us *AccessObject) Save(u *UserModel) error {
+	var err error
 	if u.Password != nil {
-		newPass, err := bcrypt.GenerateFromPassword([]byte(*u.Password), bcrypt.MinCost)
+		u.PasswordCrypt, err = bcrypt.GenerateFromPassword([]byte(*u.Password), bcrypt.MinCost)
 		if err != nil {
-			return errors.Wrap(err, "password generate error")
-		}
-		u.PasswordCrypt = pgtype.Bytea{
-			Bytes:  newPass,
-			Status: pgtype.Present,
+			return errors.Wrapf(utils.ErrInternal, "password generate error: %s", err.Error())
 		}
 	}
 
-	tx, err := pgxConn.Begin()
+	tx, err := pqConn.Begin()
 	if err != nil {
-		return errors.Wrap(err, "can not open 'user Save' transaction")
+		return errors.Wrapf(utils.ErrInternal, "can not open user save transaction: %s", err.Error())
 	}
 	//nolint:errcheck
 	defer tx.Rollback()
 
-	du, err := us.getUserImpl(tx, "username", u.Username.String)
+	du, err := us.getUserImpl(tx, "username", u.Username)
 	if err == nil && u.ID != du.ID {
 		return utils.ErrTaken
-	} else if err != nil && err != pgx.ErrNoRows {
-		return errors.Wrap(err, "get user save error")
+	} else if err != nil && err != sql.ErrNoRows {
+		return errors.Wrapf(utils.ErrInternal, "check duplicate error: %s", err.Error())
 	}
 
 	_, err = tx.Exec(`UPDATE users SET (username, password, photo_uuid, active) = (
@@ -127,12 +134,12 @@ func (us *AccessObject) Save(u *UserModel) error {
 		WHERE id = $5;`,
 		&u.Username, &u.PasswordCrypt, &u.PhotoUUID, &u.Active, &u.ID)
 	if err != nil {
-		return errors.Wrap(err, "user save error")
+		return errors.Wrapf(utils.ErrInternal, "user save error: %s", err.Error())
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return errors.Wrap(err, "user save transaction commit error")
+		return errors.Wrapf(utils.ErrInternal, "user save transaction commit error: %s", err.Error())
 	}
 
 	return nil
@@ -140,19 +147,19 @@ func (us *AccessObject) Save(u *UserModel) error {
 
 // CheckPassword проверяет пароль у юзера и сохранённый в модели
 func (us *AccessObject) CheckPassword(u *UserModel, password string) bool {
-	err := bcrypt.CompareHashAndPassword(u.PasswordCrypt.Bytes, []byte(password))
+	err := bcrypt.CompareHashAndPassword(u.PasswordCrypt, []byte(password))
 	return err == nil
 }
 
 // GetUserByID получает юзера по id
 func (us *AccessObject) GetUserByID(id int64) (*UserModel, error) {
-	u, err := us.getUserImpl(pgxConn, "id", strconv.FormatInt(id, 10))
+	u, err := us.getUserImpl(pqConn, "id", strconv.FormatInt(id, 10))
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if err == sql.ErrNoRows {
 			return nil, utils.ErrNotExists
 		}
 
-		return nil, errors.Wrap(err, "get user by id error")
+		return nil, errors.Wrapf(utils.ErrInternal, "user get by id error: %s", err.Error())
 	}
 
 	return u, nil
@@ -160,14 +167,14 @@ func (us *AccessObject) GetUserByID(id int64) (*UserModel, error) {
 
 // GetUserByUsername получает юзера по имени
 func (us *AccessObject) GetUserByUsername(username string) (*UserModel, error) {
-	u, err := us.getUserImpl(pgxConn, "username", username)
+	u, err := us.getUserImpl(pqConn, "username", username)
 
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if err == sql.ErrNoRows {
 			return nil, utils.ErrNotExists
 		}
 
-		return nil, errors.Wrap(err, "get user by username error")
+		return nil, errors.Wrapf(utils.ErrInternal, "user get by username error: %s", err.Error())
 	}
 
 	return u, nil
@@ -193,10 +200,10 @@ func (us *AccessObject) GetUsersByIDs(ids []int64) ([]*UserModel, error) {
 	}
 
 	//nolint: gosec тут точно инты и никакие хакеры ничего не сломают
-	rows, err := pgxConn.Query(fmt.Sprintf(`SELECT u.id, u.username, u.password,
+	rows, err := pqConn.Query(fmt.Sprintf(`SELECT u.id, u.username, u.password,
 	 					u.active, u.photo_uuid FROM users u WHERE id IN (%s);`, strings.Join(placeholders, ",")))
 	if err != nil {
-		return nil, errors.Wrap(err, "can not get users")
+		return nil, errors.Wrapf(utils.ErrInternal, "users get by ids error: %s", err.Error())
 	}
 	defer rows.Close()
 
@@ -207,7 +214,7 @@ func (us *AccessObject) GetUsersByIDs(ids []int64) ([]*UserModel, error) {
 			&u.PasswordCrypt, &u.Active,
 			&u.PhotoUUID)
 		if err != nil {
-			return nil, errors.Wrap(err, "scan user error")
+			return nil, errors.Wrapf(utils.ErrInternal, "users get by ids user scan error: %s", err.Error())
 		}
 
 		users = append(users, u)

@@ -2,3 +2,4 @@ warscript-users
 warscript-users.log
 run.sh
 testing
+coverage.out
