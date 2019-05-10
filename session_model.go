@@ -3,6 +3,7 @@ package main
 import (
 	"time"
 
+	"github.com/HotCodeGroup/warscript-utils/utils"
 	"github.com/go-redis/redis"
 
 	"github.com/pkg/errors"
@@ -40,7 +41,7 @@ func (ss *SessionConn) Set(s *Session) error {
 	sessionToken := uuid.NewV4()
 	err := rediCli.Set(sessionToken.String(), s.Payload, s.ExpiresAfter).Err()
 	if err != nil {
-		return errors.Wrap(err, "redis save error")
+		return errors.Wrapf(utils.ErrInternal, "redis save error: %v", err)
 	}
 
 	s.Token = sessionToken.String()
@@ -51,7 +52,7 @@ func (ss *SessionConn) Set(s *Session) error {
 func (ss *SessionConn) Delete(s *Session) error {
 	err := rediCli.Del(s.Token).Err()
 	if err != nil {
-		return errors.Wrap(err, "redis delete error")
+		return errors.Wrapf(utils.ErrInternal, "redis delete error: %v", err)
 	}
 
 	return nil
@@ -61,7 +62,7 @@ func (ss *SessionConn) Delete(s *Session) error {
 func (ss *SessionConn) GetSession(token string) (*Session, error) {
 	data, err := rediCli.Get(token).Bytes()
 	if err != nil {
-		return nil, errors.Wrap(err, "redis get error")
+		return nil, errors.Wrapf(utils.ErrInternal, "redis get error: %v", err)
 	}
 
 	return &Session{

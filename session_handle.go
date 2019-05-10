@@ -12,10 +12,10 @@ import (
 )
 
 // SessionInfo достаёт инфу о юзере из контекстаs
-func SessionInfo(r *http.Request) *SessionPayload {
+func SessionInfo(r *http.Request) *models.SessionPayload {
 	if rv := r.Context().Value(middlewares.SessionInfoKey); rv != nil {
 		if rInfo, ok := rv.(*models.SessionPayload); ok {
-			return &SessionPayload{rInfo.ID}
+			return rInfo
 		}
 	}
 
@@ -48,6 +48,7 @@ func CreateSession(w http.ResponseWriter, r *http.Request) {
 	// ставим куку
 	http.SetCookie(w, &http.Cookie{
 		Name:     "JSESSIONID",
+		Path:     "/",
 		Value:    session.Token,
 		Expires:  time.Now().Add(2628000 * time.Second),
 		HttpOnly: true,

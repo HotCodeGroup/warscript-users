@@ -1,9 +1,10 @@
 package main
 
 import (
+	"database/sql"
+
+	"github.com/HotCodeGroup/warscript-utils/models"
 	"github.com/HotCodeGroup/warscript-utils/utils"
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/pgtype"
 	"github.com/pkg/errors"
 )
 
@@ -13,23 +14,18 @@ func getInfoUserByIDImpl(id int64) (*InfoUser, error) {
 		return nil, err
 	}
 
-	photoUUID := ""
-	if user.PhotoUUID.Status == pgtype.Present {
-		photoUUID = uuid.UUID(user.PhotoUUID.Bytes).String()
-	}
-
 	return &InfoUser{
-		ID:     user.ID.Int,
-		Active: user.Active.Bool,
+		ID:     user.ID,
+		Active: user.Active,
 		BasicUser: BasicUser{
-			Username:  user.Username.String,
-			PhotoUUID: photoUUID, // точно знаем, что там 16 байт
+			Username:  user.Username,
+			PhotoUUID: user.GetPhotoUUID(), // точно знаем, что там 16 байт
 		},
 	}, nil
 }
 
 //nolint: gocyclo
-func updateUserImpl(info *SessionPayload, updateForm *FormUserUpdate) error {
+func updateUserImpl(info *models.SessionPayload, updateForm *FormUserUpdate) error {
 	if err := updateForm.Validate(); err != nil {
 		return err
 	}
@@ -49,24 +45,11 @@ func updateUserImpl(info *SessionPayload, updateForm *FormUserUpdate) error {
 
 	// хотим обновить username
 	if updateForm.Username.IsDefined() {
-		user.Username = pgtype.Varchar{
-			String: updateForm.Username.V,
-			Status: pgtype.Present,
-		}
+		user.Username = updateForm.Username.V
 	}
 
 	if updateForm.PhotoUUID.IsDefined() {
-		var photoUUID uuid.UUID
-		status := pgtype.Null
-		if updateForm.PhotoUUID.V != "" {
-			status = pgtype.Present
-			photoUUID = uuid.MustParse(updateForm.PhotoUUID.V)
-		}
-
-		user.PhotoUUID = pgtype.UUID{
-			Bytes:  photoUUID,
-			Status: status,
-		}
+		user.PhotoUUID = sql.NullString{String: updateForm.PhotoUUID.V, Valid: true}
 	}
 
 	// Если обновляется пароль, нужно проверить,
