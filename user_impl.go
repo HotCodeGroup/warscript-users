@@ -1,9 +1,10 @@
 package main
 
 import (
+	"database/sql"
+
 	"github.com/HotCodeGroup/warscript-utils/models"
 	"github.com/HotCodeGroup/warscript-utils/utils"
-	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
@@ -48,12 +49,7 @@ func updateUserImpl(info *models.SessionPayload, updateForm *FormUserUpdate) err
 	}
 
 	if updateForm.PhotoUUID.IsDefined() {
-		var photoUUID uuid.UUID
-		if updateForm.PhotoUUID.V != "" {
-			photoUUID = uuid.MustParse(updateForm.PhotoUUID.V)
-		}
-
-		user.PhotoUUID = photoUUID[:]
+		user.PhotoUUID = sql.NullString{String: updateForm.PhotoUUID.V, Valid: true}
 	}
 
 	// Если обновляется пароль, нужно проверить,

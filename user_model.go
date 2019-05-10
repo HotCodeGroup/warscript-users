@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/HotCodeGroup/warscript-utils/utils"
-	"github.com/google/uuid"
 
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -46,22 +45,18 @@ func init() {
 type UserModel struct {
 	ID            int64
 	Username      string
-	PhotoUUID     []byte
+	PhotoUUID     sql.NullString
 	Password      *string // строка для сохранения
 	Active        bool
 	PasswordCrypt []byte // внутренний хеш для проверки
 }
 
 func (u *UserModel) GetPhotoUUID() string {
-	photoUUID := ""
-	if u.PhotoUUID != nil {
-		tmpUUID, err := uuid.FromBytes(u.PhotoUUID)
-		if err == nil { // если с ошибкой, то просто не отдаём афку
-			photoUUID = tmpUUID.String()
-		}
+	if u.PhotoUUID.Valid {
+		return u.PhotoUUID.String
 	}
 
-	return photoUUID
+	return ""
 }
 
 // Create создаёт запись в базе с новыми полями

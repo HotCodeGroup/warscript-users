@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"io/ioutil"
 	"reflect"
 	"testing"
@@ -71,7 +72,7 @@ func TestGetUserByUsername(t *testing.T) {
 		users: map[int64]UserModel{
 			1: {
 				ID:        1,
-				PhotoUUID: []byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+				PhotoUUID: sql.NullString{String: "01010101-0101-0101-0101-010101010101", Valid: true},
 				Username:  "kek",
 				Active:    true,
 			},
@@ -162,7 +163,7 @@ func TestGetUsersByIDs(t *testing.T) {
 			2: {
 				ID:        2,
 				Username:  "kek1",
-				PhotoUUID: []byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+				PhotoUUID: sql.NullString{String: "01010101-0101-0101-0101-010101010101", Valid: true},
 				Active:    true,
 			},
 		},
