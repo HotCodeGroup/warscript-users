@@ -1,6 +1,6 @@
 # Warscript Users
 
-[![rcard](https://goreportcard.com/badge/github.com/HotCodeGroup/warscript-users)](https://goreportcard.com/report/github.com/HotCodeGroup/warscript-users)
+[![rcard](https://goreportcard.com/badge/github.com/HotCodeGroup/warscript-users?service=github)](https://goreportcard.com/report/github.com/HotCodeGroup/warscript-users)
 [![codecov](https://codecov.io/gh/HotCodeGroup/warscript-users/branch/master/graph/badge.svg)](https://codecov.io/gh/HotCodeGroup/warscript-users)
 
 🐶 Microservice for user authorization
