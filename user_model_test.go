@@ -48,8 +48,8 @@ func TestCreateTaken(t *testing.T) {
 
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").
-		WillReturnRows(sqlmock.NewRows([]string{"id", "username", "password", "active", "photo_uuid"}).
-			AddRow(1, "kek", []byte{1, 2, 3}, true, "kek"))
+		WillReturnRows(sqlmock.NewRows([]string{"id", "username", "password", "active", "photo_uuid", "vk_secret"}).
+			AddRow(1, "kek", []byte{1, 2, 3}, true, "kek", "lol"))
 	mock.ExpectRollback()
 
 	pqConn = db
@@ -142,8 +142,8 @@ func TestSaveTaken(t *testing.T) {
 
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").
-		WillReturnRows(sqlmock.NewRows([]string{"id", "username", "password", "active", "photo_uuid"}).
-			AddRow(2, "kek", []byte{1, 2, 3}, true, "kek"))
+		WillReturnRows(sqlmock.NewRows([]string{"id", "username", "password", "active", "photo_uuid", "vk_secret"}).
+			AddRow(2, "kek", []byte{1, 2, 3}, true, "kek", "lol"))
 	mock.ExpectRollback()
 
 	pqConn = db
@@ -205,10 +205,10 @@ func TestGetUsersByIDsModelOK(t *testing.T) {
 	defer db.Close()
 
 	mock.ExpectQuery("SELECT").
-		WillReturnRows(sqlmock.NewRows([]string{"id", "username", "password", "active", "photo_uuid"}).
-			AddRow(1, "kek1", []byte{1, 2, 3}, true, "kek").
-			AddRow(2, "kek2", []byte{1, 2, 3}, true, "kek").
-			AddRow(3, "kek3", []byte{1, 2, 3}, true, "kek"))
+		WillReturnRows(sqlmock.NewRows([]string{"id", "username", "password", "active", "photo_uuid", "vk_secret"}).
+			AddRow(1, "kek1", []byte{1, 2, 3}, true, "kek", "lol").
+			AddRow(2, "kek2", []byte{1, 2, 3}, true, "kek", "lol").
+			AddRow(3, "kek3", []byte{1, 2, 3}, true, "kek", "lol"))
 
 	pqConn = db
 	Users = &AccessObject{}
@@ -230,8 +230,8 @@ func TestGetUserByIDModelOK(t *testing.T) {
 	defer db.Close()
 
 	mock.ExpectQuery("SELECT").
-		WillReturnRows(sqlmock.NewRows([]string{"id", "username", "password", "active", "photo_uuid"}).
-			AddRow(1, "kek1", []byte{1, 2, 3}, true, "kek"))
+		WillReturnRows(sqlmock.NewRows([]string{"id", "username", "password", "active", "photo_uuid", "vk_secret"}).
+			AddRow(1, "kek1", []byte{1, 2, 3}, true, "kek", "lol"))
 
 	pqConn = db
 	Users = &AccessObject{}
@@ -276,8 +276,8 @@ func TestGetUserByUsernameModelOK(t *testing.T) {
 	defer db.Close()
 
 	mock.ExpectQuery("SELECT").
-		WillReturnRows(sqlmock.NewRows([]string{"id", "username", "password", "active", "photo_uuid"}).
-			AddRow(1, "kek1", []byte{1, 2, 3}, true, "kek"))
+		WillReturnRows(sqlmock.NewRows([]string{"id", "username", "password", "active", "photo_uuid", "vk_secret"}).
+			AddRow(1, "kek1", []byte{1, 2, 3}, true, "kek", "lol"))
 
 	pqConn = db
 	Users = &AccessObject{}

@@ -197,8 +197,8 @@ func (us *AccessObject) getUserImpl(q postgresql.Queryer, field, value string) (
 	u := &UserModel{}
 
 	row := q.QueryRow(`SELECT u.id, u.username, u.password,
-	 					u.active, u.photo_uuid FROM users u WHERE `+field+` = $1;`, value)
-	if err := row.Scan(&u.ID, &u.Username, &u.PasswordCrypt, &u.Active, &u.PhotoUUID); err != nil {
+	 					u.active, u.photo_uuid, u.vk_secret FROM users u WHERE `+field+` = $1;`, value)
+	if err := row.Scan(&u.ID, &u.Username, &u.PasswordCrypt, &u.Active, &u.PhotoUUID, &u.VkSecret); err != nil {
 		return nil, err
 	}
 
@@ -214,7 +214,7 @@ func (us *AccessObject) GetUsersByIDs(ids []int64) ([]*UserModel, error) {
 
 	//nolint: gosec тут точно инты и никакие хакеры ничего не сломают
 	rows, err := pqConn.Query(fmt.Sprintf(`SELECT u.id, u.username, u.password,
-	 					u.active, u.photo_uuid FROM users u WHERE id IN (%s);`, strings.Join(placeholders, ",")))
+	 					u.active, u.photo_uuid, u.vk_secret FROM users u WHERE id IN (%s);`, strings.Join(placeholders, ",")))
 	if err != nil {
 		return nil, errors.Wrapf(utils.ErrInternal, "users get by ids error: %s", err.Error())
 	}
@@ -225,7 +225,7 @@ func (us *AccessObject) GetUsersByIDs(ids []int64) ([]*UserModel, error) {
 		u := &UserModel{}
 		err = rows.Scan(&u.ID, &u.Username,
 			&u.PasswordCrypt, &u.Active,
-			&u.PhotoUUID)
+			&u.PhotoUUID, &u.VkSecret)
 		if err != nil {
 			return nil, errors.Wrapf(utils.ErrInternal, "users get by ids user scan error: %s", err.Error())
 		}

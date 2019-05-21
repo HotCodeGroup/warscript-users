@@ -8,19 +8,22 @@ import (
 	"github.com/pkg/errors"
 )
 
-func getInfoUserByIDImpl(id int64) (*InfoUser, error) {
+func getInfoUserByIDImpl(id int64) (*ProfileInfoUser, error) {
 	user, err := Users.GetUserByID(id)
 	if err != nil {
 		return nil, err
 	}
 
-	return &InfoUser{
-		ID:     user.ID,
-		Active: user.Active,
-		BasicUser: BasicUser{
-			Username:  user.Username,
-			PhotoUUID: user.GetPhotoUUID(), // точно знаем, что там 16 байт
+	return &ProfileInfoUser{
+		InfoUser: InfoUser{
+			ID:     user.ID,
+			Active: user.Active,
+			BasicUser: BasicUser{
+				Username:  user.Username,
+				PhotoUUID: user.GetPhotoUUID(), // точно знаем, что там 16 байт
+			},
 		},
+		VkSecret: user.VkSecret,
 	}, nil
 }
 

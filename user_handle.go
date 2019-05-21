@@ -62,7 +62,8 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteApplicationJSON(w, http.StatusOK, infoUser)
+	// !!! отдаём только ту часть, которая без секрета
+	utils.WriteApplicationJSON(w, http.StatusOK, infoUser.InfoUser)
 }
 
 // UpdateUser обновляет данные пользователя

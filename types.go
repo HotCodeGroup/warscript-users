@@ -20,6 +20,13 @@ type InfoUser struct {
 	Active bool  `json:"active"`
 }
 
+// ProfileInfoUser личный профил юзера, содержит секретную инфу,
+// отдаётся только по токену
+type ProfileInfoUser struct {
+	InfoUser
+	VkSecret string `json:"vk_secret"`
+}
+
 // FormUser BasicUser, расширенный паролем, используется для входа и регистрации
 type FormUser struct {
 	BasicUser

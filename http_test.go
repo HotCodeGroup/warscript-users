@@ -622,7 +622,7 @@ func TestGetSession(t *testing.T) {
 		{ // теперь всё ок
 			Case: testutils.Case{
 				ExpectedCode: 200,
-				ExpectedBody: `{"username":"golang","photo_uuid":"2eb4a823-3a6d-4cba-8767-4d4946890f4f","id":1,"active":true}`,
+				ExpectedBody: `{"username":"golang","photo_uuid":"2eb4a823-3a6d-4cba-8767-4d4946890f4f","id":1,"active":true,"vk_secret":""}`,
 				Method:       "DELETE",
 				Pattern:      "/sessions",
 				Function:     GetSession,

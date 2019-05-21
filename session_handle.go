@@ -93,7 +93,7 @@ func GetSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	infoUser, err := getInfoUserByIDImpl(info.ID)
+	profileInfoUser, err := getInfoUserByIDImpl(info.ID)
 	if err != nil {
 		if errors.Cause(err) == utils.ErrNotExists {
 			errWriter.WriteWarn(http.StatusUnauthorized, errors.Wrap(err, "user not exists"))
@@ -103,5 +103,5 @@ func GetSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteApplicationJSON(w, http.StatusOK, infoUser)
+	utils.WriteApplicationJSON(w, http.StatusOK, profileInfoUser)
 }
