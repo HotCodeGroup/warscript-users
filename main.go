@@ -104,7 +104,8 @@ func main() {
 	}()
 
 	rediCli, err = redis.Connect(redisConf.Data["user"].(string),
-		redisConf.Data["pass"].(string), redisConf.Data["addr"].(string))
+		redisConf.Data["pass"].(string), redisConf.Data["addr"].(string),
+		redisConf.Data["database"].(string))
 	if err != nil {
 		logger.Errorf("can not connect redis: %s", err)
 		return
