@@ -47,6 +47,15 @@ func (u *usersTest) CheckPassword(m *UserModel, password string) bool {
 }
 
 // GetUserByID получает юзера по id
+func (u *usersTest) GetUserBySecret(s string) (*UserModel, error) {
+	if err := u.NextFail(); err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
+
+// GetUserByID получает юзера по id
 func (u *usersTest) GetUserByID(id int64) (*UserModel, error) {
 	if err := u.NextFail(); err != nil {
 		return nil, err

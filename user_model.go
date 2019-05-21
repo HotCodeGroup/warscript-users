@@ -7,6 +7,7 @@ import (
 
 	"github.com/HotCodeGroup/warscript-utils/postgresql"
 	"github.com/HotCodeGroup/warscript-utils/utils"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -23,6 +24,7 @@ type UserAccessObject interface {
 	GetUserByID(id int64) (*UserModel, error)
 	GetUserByUsername(username string) (*UserModel, error)
 	GetUsersByIDs(ids []int64) ([]*UserModel, error)
+	GetUserBySecret(secret string) (*UserModel, error)
 
 	Create(u *UserModel) error
 	Save(u *UserModel) error
@@ -47,6 +49,7 @@ type UserModel struct {
 	Password      *string // строка для сохранения
 	Active        bool
 	PasswordCrypt []byte // внутренний хеш для проверки
+	VkSecret      string
 }
 
 // GetPhotoUUID возвращает photoUUID или пустую строку, если его нет в базе
@@ -82,7 +85,8 @@ func (us *AccessObject) Create(u *UserModel) error {
 		return errors.Wrapf(utils.ErrInternal, "check duplicate error: %s", err.Error())
 	}
 
-	_, err = tx.Exec(`INSERT INTO users (username, password) VALUES($1, $2);`, &u.Username, &u.PasswordCrypt)
+	vkSecret := uuid.NewV4().String()[:8] // создаём секретный ключ для вк
+	_, err = tx.Exec(`INSERT INTO users (username, password, vk_secret) VALUES($1, $2, $3);`, &u.Username, &u.PasswordCrypt, vkSecret)
 	if err != nil {
 		return errors.Wrapf(utils.ErrInternal, "user create error: %s", err.Error())
 	}
@@ -143,6 +147,20 @@ func (us *AccessObject) Save(u *UserModel) error {
 func (us *AccessObject) CheckPassword(u *UserModel, password string) bool {
 	err := bcrypt.CompareHashAndPassword(u.PasswordCrypt, []byte(password))
 	return err == nil
+}
+
+// GetUserBySecret получает юзера по id
+func (us *AccessObject) GetUserBySecret(secret string) (*UserModel, error) {
+	u, err := us.getUserImpl(pqConn, "vk_secret", secret)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, utils.ErrNotExists
+		}
+
+		return nil, errors.Wrapf(utils.ErrInternal, "user get by secret error: %s", err.Error())
+	}
+
+	return u, nil
 }
 
 // GetUserByID получает юзера по id
