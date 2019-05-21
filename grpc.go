@@ -37,14 +37,35 @@ func (m *AuthManager) GetUserByID(ctx context.Context, userID *models.UserID) (*
 // GetUserByUsername получает одного юзера по username
 func (m *AuthManager) GetUserByUsername(ctx context.Context, username *models.Username) (*models.InfoUser, error) {
 	logger := logger.WithFields(logrus.Fields{
-		"method":   "grpc_GetUserByID",
+		"method":   "grpc_GetUserByUsername",
 		"username": username.Username,
 	})
 
 	usr, err := Users.GetUserByUsername(username.Username)
 	if err != nil {
-		logger.Errorf("can not get user by id: %s", err)
-		return nil, errors.Wrap(err, "can not get user by id")
+		logger.Errorf("can not get user by username: %s", err)
+		return nil, errors.Wrap(err, "can not get user by username")
+	}
+
+	logger.Info("successful")
+	return &models.InfoUser{
+		ID:        usr.ID,
+		Username:  usr.Username,
+		PhotoUUID: usr.GetPhotoUUID(),
+		Active:    usr.Active,
+	}, nil
+}
+
+// GetUserByUsername получает одного юзера по username
+func (m *AuthManager) GetUserBySecret(ctx context.Context, vkSecret *models.VkSecret) (*models.InfoUser, error) {
+	logger := logger.WithFields(logrus.Fields{
+		"method": "grpc_GetUserBySecret",
+	})
+
+	usr, err := Users.GetUserBySecret(vkSecret.VkSecret)
+	if err != nil {
+		logger.Errorf("can not get user by secret: %s", err)
+		return nil, errors.Wrap(err, "can not get user by secret")
 	}
 
 	logger.Info("successful")

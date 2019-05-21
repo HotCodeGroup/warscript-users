@@ -4,7 +4,7 @@ go 1.12
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.3.3
-	github.com/HotCodeGroup/warscript-utils v0.0.0-20190521082249-958f8aa86c74
+	github.com/HotCodeGroup/warscript-utils v0.0.0-20190521110249-bd01ffff9945
 	github.com/alicebob/gopher-json v0.0.0-20180125190556-5a6b3ba71ee6 // indirect
 	github.com/alicebob/miniredis v2.5.0+incompatible
 	github.com/elliotchance/redismock v1.5.1
