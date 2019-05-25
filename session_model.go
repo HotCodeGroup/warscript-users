@@ -6,8 +6,8 @@ import (
 	"github.com/HotCodeGroup/warscript-utils/utils"
 	"github.com/go-redis/redis"
 
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	uuid "github.com/satori/go.uuid"
 )
 
 var rediCli *redis.Client
@@ -39,7 +39,7 @@ type Session struct {
 // Set валидирует и сохраняет сессию в хранилище по сгенерированному токену
 // Токен сохраняется в s.Token
 func (ss *SessionConn) Set(s *Session) error {
-	sessionToken := uuid.NewV4()
+	sessionToken := uuid.New()
 	err := rediCli.Set(sessionToken.String(), s.Payload, s.ExpiresAfter).Err()
 	if err != nil {
 		return errors.Wrapf(utils.ErrInternal, "redis save error: %v", err)

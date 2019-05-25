@@ -7,7 +7,7 @@ import (
 
 	"github.com/HotCodeGroup/warscript-utils/postgresql"
 	"github.com/HotCodeGroup/warscript-utils/utils"
-	uuid "github.com/satori/go.uuid"
+	"github.com/google/uuid"
 
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -85,7 +85,7 @@ func (us *AccessObject) Create(u *UserModel) error {
 		return errors.Wrapf(utils.ErrInternal, "check duplicate error: %s", err.Error())
 	}
 
-	vkSecret := uuid.NewV4().String()[:8] // создаём секретный ключ для вк
+	vkSecret := uuid.New().String()[:8] // создаём секретный ключ для вк
 	_, err = tx.Exec(`INSERT INTO users (username, password, vk_secret) VALUES($1, $2, $3);`, &u.Username, &u.PasswordCrypt, vkSecret)
 	if err != nil {
 		return errors.Wrapf(utils.ErrInternal, "user create error: %s", err.Error())
