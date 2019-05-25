@@ -6,7 +6,9 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 
 	"github.com/gorilla/mux"
 
@@ -29,6 +31,14 @@ import (
 )
 
 var logger *logrus.Logger
+
+func deregisterService(consul *consulapi.Client, id string) {
+	err := consul.Agent().ServiceDeregister(id)
+	if err != nil {
+		logger.Errorf("can not derigister %s service: %s", id, err)
+	}
+	logger.Infof("successfully derigister %s service", id)
+}
 
 //nolint: gocyclo
 func main() {
@@ -80,13 +90,7 @@ func main() {
 		Port:    httpPort,
 		Address: "127.0.0.1",
 	})
-	defer func() {
-		err = consul.Agent().ServiceDeregister(httpServiceID)
-		if err != nil {
-			logger.Errorf("can not derigister http service: %s", err)
-		}
-		logger.Info("successfully derigister http service")
-	}()
+	defer deregisterService(consul, httpServiceID)
 
 	grpcServiceID := fmt.Sprintf("warscript-users-grpc:%d", grpcPort)
 	err = consul.Agent().ServiceRegister(&consulapi.AgentServiceRegistration{
@@ -95,13 +99,7 @@ func main() {
 		Port:    grpcPort,
 		Address: "127.0.0.1",
 	})
-	defer func() {
-		err = consul.Agent().ServiceDeregister(grpcServiceID)
-		if err != nil {
-			logger.Errorf("can not derigister grpc service: %s", err)
-		}
-		logger.Info("successfully derigister grpc service")
-	}()
+	defer deregisterService(consul, grpcServiceID)
 
 	rediCli, err = redis.Connect(redisConf.Data["user"].(string),
 		redisConf.Data["pass"].(string), redisConf.Data["addr"].(string),
@@ -135,6 +133,26 @@ func main() {
 			logger.Fatalf("Auth gRPC service failed at port %d", grpcPort)
 			os.Exit(1)
 		}
+	}()
+
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Kill, os.Interrupt, syscall.SIGTERM)
+
+	go func() {
+		<-signals
+
+		// вырубили http
+		deregisterService(consul, httpServiceID)
+		// вырубили grpc
+		deregisterService(consul, grpcServiceID)
+		// отрубили базули
+		rediCli.Close()
+		logger.Info("successfully closed warscript-users redis connection")
+		pqConn.Close()
+		logger.Info("successfully closed warscript-users postgreSQL connection")
+
+		logger.Infof("[SIGNAL] Stopped by signal!")
+		os.Exit(0)
 	}()
 
 	localGRPCAuth := &LocalAuthClient{}
