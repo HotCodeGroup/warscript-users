@@ -1,4 +1,4 @@
-package main
+package jmodels
 
 import (
 	"github.com/HotCodeGroup/warscript-utils/utils"
