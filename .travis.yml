@@ -1,11 +1,17 @@
 language: go
 go:
 - '1.12'
+services:
+- docker
 script:
-- go build .
+- echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+- docker build -t warscript-users .
+- docker images
+- docker tag warscript-users $DOCKER_USER/warscript-users
+- docker push $DOCKER_USER/warscript-users
 - chmod 600 ./2019_1_HotCode_id_rsa.pem
 - ssh-keyscan -H 89.208.198.192 >> ~/.ssh/known_hosts
-- scp -i ./2019_1_HotCode_id_rsa.pem ./warscript-users ubuntu@89.208.198.192:/home/ubuntu/production-back
+- ssh -i ./2019_1_HotCode_id_rsa.pem ubuntu@89.208.198.192 docker run -e CONSUL_ADDR='$CONSUL_ADDR' -e VAULT_ADDR='$VAULT_ADDR' -e VAULT_TOKEN='$VAULT_TOKEN' -d --net=host $DOCKER_USER/warscript-users
 branches:
   only:
   - continuous-deploy-tests
