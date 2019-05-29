@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/HotCodeGroup/warscript-users/jmodels"
 	"github.com/HotCodeGroup/warscript-utils/utils"
 
 	"github.com/gorilla/mux"
@@ -16,7 +17,7 @@ func CheckUsername(w http.ResponseWriter, r *http.Request) {
 	logger := utils.GetLogger(r, logger, "CheckUsername")
 	errWriter := utils.NewErrorResponseWriter(w, logger)
 
-	bUser := &BasicUser{}
+	bUser := &jmodels.BasicUser{}
 	err := utils.DecodeBodyJSON(r.Body, bUser)
 	if err != nil {
 		errWriter.WriteWarn(http.StatusBadRequest, errors.Wrap(err, "decode body error"))
@@ -76,7 +77,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updateForm := &FormUserUpdate{}
+	updateForm := &jmodels.FormUserUpdate{}
 	err := utils.DecodeBodyJSON(r.Body, updateForm)
 	if err != nil {
 		errWriter.WriteWarn(http.StatusBadRequest, errors.Wrap(err, "decode body error"))
@@ -107,7 +108,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	logger := utils.GetLogger(r, logger, "CreateUser")
 	errWriter := utils.NewErrorResponseWriter(w, logger)
 
-	form := &FormUser{}
+	form := &jmodels.FormUser{}
 	err := utils.DecodeBodyJSON(r.Body, form)
 	if err != nil {
 		errWriter.WriteWarn(http.StatusBadRequest, errors.Wrap(err, "decode body error"))

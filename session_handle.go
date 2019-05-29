@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/HotCodeGroup/warscript-users/jmodels"
 	"github.com/HotCodeGroup/warscript-utils/middlewares"
 	"github.com/HotCodeGroup/warscript-utils/models"
 	"github.com/HotCodeGroup/warscript-utils/utils"
@@ -27,7 +28,7 @@ func CreateSession(w http.ResponseWriter, r *http.Request) {
 	logger := utils.GetLogger(r, logger, "SignInUser")
 	errWriter := utils.NewErrorResponseWriter(w, logger)
 
-	form := &FormUser{}
+	form := &jmodels.FormUser{}
 	err := utils.DecodeBodyJSON(r.Body, form)
 	if err != nil {
 		errWriter.WriteWarn(http.StatusBadRequest, errors.Wrap(err, "decode body error"))

@@ -3,22 +3,23 @@ package main
 import (
 	"database/sql"
 
+	"github.com/HotCodeGroup/warscript-users/jmodels"
 	"github.com/HotCodeGroup/warscript-utils/models"
 	"github.com/HotCodeGroup/warscript-utils/utils"
 	"github.com/pkg/errors"
 )
 
-func getInfoUserByIDImpl(id int64) (*ProfileInfoUser, error) {
+func getInfoUserByIDImpl(id int64) (*jmodels.ProfileInfoUser, error) {
 	user, err := Users.GetUserByID(id)
 	if err != nil {
 		return nil, err
 	}
 
-	return &ProfileInfoUser{
-		InfoUser: InfoUser{
+	return &jmodels.ProfileInfoUser{
+		InfoUser: jmodels.InfoUser{
 			ID:     user.ID,
 			Active: user.Active,
-			BasicUser: BasicUser{
+			BasicUser: jmodels.BasicUser{
 				Username:  user.Username,
 				PhotoUUID: user.GetPhotoUUID(), // точно знаем, что там 16 байт
 			},
@@ -28,7 +29,7 @@ func getInfoUserByIDImpl(id int64) (*ProfileInfoUser, error) {
 }
 
 //nolint: gocyclo
-func updateUserImpl(info *models.SessionPayload, updateForm *FormUserUpdate) error {
+func updateUserImpl(info *models.SessionPayload, updateForm *jmodels.FormUserUpdate) error {
 	if err := updateForm.Validate(); err != nil {
 		return err
 	}

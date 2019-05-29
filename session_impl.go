@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/HotCodeGroup/warscript-users/jmodels"
 	"github.com/HotCodeGroup/warscript-utils/utils"
 	"github.com/pkg/errors"
 )
 
-func createSessionImpl(form *FormUser) (*Session, error) {
+func createSessionImpl(form *jmodels.FormUser) (*Session, error) {
 	if err := form.Validate(); err != nil {
 		return nil, err
 	}
@@ -26,7 +27,7 @@ func createSessionImpl(form *FormUser) (*Session, error) {
 		}
 	}
 
-	data, err := json.Marshal(&SessionPayload{
+	data, err := json.Marshal(&jmodels.SessionPayload{
 		ID: user.ID,
 	})
 	if err != nil {
@@ -45,12 +46,12 @@ func createSessionImpl(form *FormUser) (*Session, error) {
 	return session, nil
 }
 
-func getSessionImpl(token string) (*SessionPayload, error) {
+func getSessionImpl(token string) (*jmodels.SessionPayload, error) {
 	session, err := Sessions.GetSession(token)
 	if err != nil {
 		return nil, err
 	}
-	payload := &SessionPayload{}
+	payload := &jmodels.SessionPayload{}
 	err = json.Unmarshal(session.Payload, payload)
 	if err != nil {
 		return nil, errors.Wrap(err, "payload unmarshal error")
