@@ -11,8 +11,13 @@ echo -e "# Starting docker.\n"
 
 chmod 600 ./2019_1_HotCode_id_rsa.pem
 ssh-keyscan -H 89.208.198.192 >> ~/.ssh/known_hosts
-ssh -i ./2019_1_HotCode_id_rsa.pem ubuntu@89.208.198.192 docker run -e CONSUL_ADDR='$CONSUL_ADDR' \
+for (( c=1; c<=$CONTAINERS_COUNT; c++ ))
+do
+    ssh -i ./2019_1_HotCode_id_rsa.pem ubuntu@89.208.198.192 docker stop warscript-users.$c
+    ssh -i ./2019_1_HotCode_id_rsa.pem ubuntu@89.208.198.192 docker rm warscript-users.$c
+    ssh -i ./2019_1_HotCode_id_rsa.pem ubuntu@89.208.198.192 docker run -e CONSUL_ADDR='$CONSUL_ADDR' \
                                                                     -e VAULT_ADDR='$VAULT_ADDR' \
                                                                     -e VAULT_TOKEN='$VAULT_TOKEN' \
-                                                                    --name=warscript-users.1 \
+                                                                    --name=warscript-users.$c \
                                                                     -d --net=host $DOCKER_USER/warscript-users
+done
