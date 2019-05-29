@@ -12,6 +12,7 @@ echo $CONSUL_ADDR
 
 chmod 600 ./2019_1_HotCode_id_rsa.pem
 ssh-keyscan -H 89.208.198.192 >> ~/.ssh/known_hosts
+ssh -i ./2019_1_HotCode_id_rsa.pem ubuntu@89.208.198.192 docker pull $DOCKER_USER/warscript-users
 for (( c=1; c<=$CONTAINERS_COUNT; c++ ))
 do
     ssh -i ./2019_1_HotCode_id_rsa.pem ubuntu@89.208.198.192 docker stop warscript-users.$c
