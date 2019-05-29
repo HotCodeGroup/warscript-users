@@ -3,3 +3,4 @@ warscript-users.log
 run.sh
 testing
 coverage.out
+/scripts/run.sh
